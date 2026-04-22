@@ -277,7 +277,7 @@ const FOREIGN_COUNTRIES = [
     universities: [
       { name: "NUS (National University of Singapore)", rank: 8, field: "CS, Engineering, Business", note: "Asia's #1 university" },
       { name: "NTU (Nanyang Technological University)", rank: 15, field: "Engineering, Sciences, AI", note: "World-class engineering" },
-      { name: "SMU (Singapore Management University)", rank: 551+, field: "Business, Law, Information Systems", note: "Strong finance/law" },
+      { name: "SMU (Singapore Management University)", rank: "551+", field: "Business, Law, Information Systems", note: "Strong finance/law" },
     ],
     tips: ["NUS/NTU are among TOP 15 universities globally — huge ROI", "Very competitive — need 90%+ in Class 12 boards AND strong SAT/A-levels", "Scholarships: ASEAN scholarships not for Indians, but NUS/NTU merit scholarships available", "Safe, clean, English-speaking environment — easy for Indian students", "Strong global alumni network, esp in Southeast Asia and tech industry", "Application portal: apply.nus.edu.sg / admissions.ntu.edu.sg"],
   },
