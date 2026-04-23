@@ -1054,7 +1054,7 @@ function JoSAAGuide({ t }) {
                 {label:"Risk of losing current seat?", float:"❌ None", slide:"❌ None"},
                 {label:"Best for", float:"Want better college OR branch", slide:"Love the college, want better branch"},
               ].map((row, i) => (
-                <React.Fragment key={i}>
+                <div key={i} style={{display:"contents"}}>
                   {["label","float","slide"].map(col => (
                     <div key={col} style={{
                       padding:"10px 12px", fontSize:12.5,
@@ -1068,7 +1068,7 @@ function JoSAAGuide({ t }) {
                       {row[col]}
                     </div>
                   ))}
-                </React.Fragment>
+                </div>
               ))}
             </div>
             <div style={{marginTop:12, fontSize:13, color:t.textMuted, background:t.bgCard2, borderRadius:8, padding:"10px 12px"}}>
