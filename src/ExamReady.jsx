@@ -277,7 +277,7 @@ const FOREIGN_COUNTRIES = [
     universities: [
       { name: "NUS (National University of Singapore)", rank: 8, field: "CS, Engineering, Business", note: "Asia's #1 university" },
       { name: "NTU (Nanyang Technological University)", rank: 15, field: "Engineering, Sciences, AI", note: "World-class engineering" },
-      { name: "SMU (Singapore Management University)", rank: "551+", field: "Business, Law, Information Systems", note: "Strong finance/law" },
+      { name: "SMU (Singapore Management University)", rank: 551+, field: "Business, Law, Information Systems", note: "Strong finance/law" },
     ],
     tips: ["NUS/NTU are among TOP 15 universities globally — huge ROI", "Very competitive — need 90%+ in Class 12 boards AND strong SAT/A-levels", "Scholarships: ASEAN scholarships not for Indians, but NUS/NTU merit scholarships available", "Safe, clean, English-speaking environment — easy for Indian students", "Strong global alumni network, esp in Southeast Asia and tech industry", "Application portal: apply.nus.edu.sg / admissions.ntu.edu.sg"],
   },
@@ -371,6 +371,7 @@ export default function App() {
         {tab === "josaa" && <JoSAAGuide t={t} />}
         {tab === "counsellor" && <AICounsellor t={t} dark={dark} />}
         {tab === "colleges" && <IndiaColleges t={t} />}
+        {tab === "collegesearch" && <CollegeSearch t={t} />}
         {tab === "abroad" && <StudyAbroad t={t} />}
       </main>
     </div>
@@ -385,6 +386,7 @@ function Header({ dark, setDark, tab, setTab, t }) {
     { id: "josaa", label: "JoSAA Guide", icon: "📋" },
     { id: "counsellor", label: "AI Counsellor", icon: "🤖" },
     { id: "colleges", label: "Colleges India", icon: "🏛️" },
+    { id: "collegesearch", label: "College Search", icon: "🔍" },
     { id: "abroad", label: "Study Abroad", icon: "🌍" },
   ];
   return (
@@ -499,7 +501,8 @@ function Dashboard({ t, setTab }) {
         {[
           { tab:"guide", icon:"📖", color:"#6366f1", title:"Step-by-Step Exam Guides", desc:"Complete phases for JEE, BITSAT, VITEEE, COMEDK — from registration to seat allocation." },
           { tab:"josaa", icon:"📋", color:"#8b5cf6", title:"JoSAA Counselling Guide", desc:"Float, Slide, Accept, Withdraw explained simply. HS/OS quota, choice-filling strategy, checklist." },
-          { tab:"counsellor", icon:"🤖", color:t.accent, title:"AI Counsellor (Claude)", desc:"Ask any question about exams, cutoffs, counselling strategies, category reservations." },
+          { tab:"counsellor", icon:"🤖", color:t.accent, title:"AI Counsellor (Groq)", desc:"Ask any question about JEE, cutoffs, counselling strategies, category reservations — answered in seconds." },
+          { tab:"collegesearch", icon:"🔍", color:"#38bdf8", title:"Find Any College in India", desc:"Search any engineering college — get its official website, location, exam, and type instantly." },
           { tab:"colleges", icon:"🏛️", color:t.success, title:"College Explorer India", desc:"Browse IITs, NITs, BITS, and 100+ colleges with cutoff ranks, fees, and ratings." },
           { tab:"abroad", icon:"🌍", color:t.accentSub, title:"Study Abroad Guide", desc:"USA, UK, Canada, Germany, Australia, Singapore — exams, costs, visa, top universities." },
         ].map(c => (
@@ -679,7 +682,7 @@ Style: Be warm, encouraging, and precise. When explaining processes, use numbere
     <div className="anim-fadeup" style={{ display:"flex", flexDirection:"column", gap:16 }}>
       <div>
         <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:22, marginBottom:4 }}>🤖 AI Exam Counsellor</div>
-        <div style={{ color:t.textMuted, fontSize:14 }}>Powered by Claude · Ask anything about JEE, BITSAT, VITEEE, JoSAA, Study Abroad, reservations, counselling strategy — explained from scratch.</div>
+        <div style={{ color:t.textMuted, fontSize:14 }}>Powered by Groq · Llama 3.3 70B · Ask anything about JEE, BITSAT, VITEEE, JoSAA, Study Abroad, reservations, counselling strategy — explained from scratch.</div>
       </div>
 
       {/* Quick prompts */}
@@ -1366,6 +1369,351 @@ function JoSAAGuide({ t }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ─── COLLEGE SEARCH ─────────────────────────────────────────────────────── */
+const COLLEGE_DB = [
+  // IITs
+  { name:"IIT Bombay", short:"IITB", type:"IIT", city:"Mumbai", state:"Maharashtra", exam:"JEE Advanced", url:"https://www.iitb.ac.in", nirf:3 },
+  { name:"IIT Delhi", short:"IITD", type:"IIT", city:"New Delhi", state:"Delhi", exam:"JEE Advanced", url:"https://home.iitd.ac.in", nirf:2 },
+  { name:"IIT Madras", short:"IITM", type:"IIT", city:"Chennai", state:"Tamil Nadu", exam:"JEE Advanced", url:"https://www.iitm.ac.in", nirf:1 },
+  { name:"IIT Kanpur", short:"IITK", type:"IIT", city:"Kanpur", state:"Uttar Pradesh", exam:"JEE Advanced", url:"https://www.iitk.ac.in", nirf:4 },
+  { name:"IIT Kharagpur", short:"IITKgp", type:"IIT", city:"Kharagpur", state:"West Bengal", exam:"JEE Advanced", url:"https://www.iitkgp.ac.in", nirf:5 },
+  { name:"IIT Roorkee", short:"IITR", type:"IIT", city:"Roorkee", state:"Uttarakhand", exam:"JEE Advanced", url:"https://www.iitr.ac.in", nirf:6 },
+  { name:"IIT Guwahati", short:"IITG", type:"IIT", city:"Guwahati", state:"Assam", exam:"JEE Advanced", url:"https://www.iitg.ac.in", nirf:7 },
+  { name:"IIT Hyderabad", short:"IITH", type:"IIT", city:"Hyderabad", state:"Telangana", exam:"JEE Advanced", url:"https://www.iith.ac.in", nirf:8 },
+  { name:"IIT Indore", short:"IITI", type:"IIT", city:"Indore", state:"Madhya Pradesh", exam:"JEE Advanced", url:"https://www.iiti.ac.in", nirf:null },
+  { name:"IIT Jodhpur", short:"IITJ", type:"IIT", city:"Jodhpur", state:"Rajasthan", exam:"JEE Advanced", url:"https://www.iitj.ac.in", nirf:null },
+  { name:"IIT Mandi", short:"IITMandi", type:"IIT", city:"Mandi", state:"Himachal Pradesh", exam:"JEE Advanced", url:"https://www.iitmandi.ac.in", nirf:null },
+  { name:"IIT Patna", short:"IITP", type:"IIT", city:"Patna", state:"Bihar", exam:"JEE Advanced", url:"https://www.iitp.ac.in", nirf:null },
+  { name:"IIT Ropar", short:"IITRpr", type:"IIT", city:"Rupnagar", state:"Punjab", exam:"JEE Advanced", url:"https://www.iitrpr.ac.in", nirf:null },
+  { name:"IIT Bhubaneswar", short:"IITBBS", type:"IIT", city:"Bhubaneswar", state:"Odisha", exam:"JEE Advanced", url:"https://www.iitbbs.ac.in", nirf:null },
+  { name:"IIT Gandhinagar", short:"IITGN", type:"IIT", city:"Gandhinagar", state:"Gujarat", exam:"JEE Advanced", url:"https://www.iitgn.ac.in", nirf:null },
+  { name:"IIT Tirupati", short:"IITTP", type:"IIT", city:"Tirupati", state:"Andhra Pradesh", exam:"JEE Advanced", url:"https://www.iittp.ac.in", nirf:null },
+  { name:"IIT Palakkad", short:"IITPKD", type:"IIT", city:"Palakkad", state:"Kerala", exam:"JEE Advanced", url:"https://www.iitpkd.ac.in", nirf:null },
+  { name:"IIT Jammu", short:"IITJmu", type:"IIT", city:"Jammu", state:"J&K", exam:"JEE Advanced", url:"https://www.iitjammu.ac.in", nirf:null },
+  { name:"IIT Bhilai", short:"IITBhi", type:"IIT", city:"Bhilai", state:"Chhattisgarh", exam:"JEE Advanced", url:"https://www.iitbhilai.ac.in", nirf:null },
+  { name:"IIT Dharwad", short:"IITDhw", type:"IIT", city:"Dharwad", state:"Karnataka", exam:"JEE Advanced", url:"https://www.iitdh.ac.in", nirf:null },
+  { name:"IIT Goa", short:"IITGoa", type:"IIT", city:"Goa", state:"Goa", exam:"JEE Advanced", url:"https://www.iitgoa.ac.in", nirf:null },
+  { name:"IIT (ISM) Dhanbad", short:"IIT ISM", type:"IIT", city:"Dhanbad", state:"Jharkhand", exam:"JEE Advanced", url:"https://www.iitism.ac.in", nirf:null },
+  { name:"IIT (BHU) Varanasi", short:"IIT BHU", type:"IIT", city:"Varanasi", state:"Uttar Pradesh", exam:"JEE Advanced", url:"https://www.iitbhu.ac.in", nirf:null },
+  // NITs
+  { name:"NIT Trichy", short:"NITT", type:"NIT", city:"Tiruchirappalli", state:"Tamil Nadu", exam:"JEE Main", url:"https://www.nitt.edu", nirf:9 },
+  { name:"NIT Warangal", short:"NITW", type:"NIT", city:"Warangal", state:"Telangana", exam:"JEE Main", url:"https://www.nitw.ac.in", nirf:28 },
+  { name:"NIT Surathkal", short:"NITK", type:"NIT", city:"Mangaluru", state:"Karnataka", exam:"JEE Main", url:"https://www.nitk.ac.in", nirf:26 },
+  { name:"NIT Calicut", short:"NITC", type:"NIT", city:"Kozhikode", state:"Kerala", exam:"JEE Main", url:"https://www.nitc.ac.in", nirf:30 },
+  { name:"NIT Rourkela", short:"NITR", type:"NIT", city:"Rourkela", state:"Odisha", exam:"JEE Main", url:"https://www.nitrkl.ac.in", nirf:19 },
+  { name:"NIT Allahabad (MNNIT)", short:"MNNIT", type:"NIT", city:"Prayagraj", state:"Uttar Pradesh", exam:"JEE Main", url:"https://www.mnnit.ac.in", nirf:null },
+  { name:"NIT Jaipur (MNIT)", short:"MNIT", type:"NIT", city:"Jaipur", state:"Rajasthan", exam:"JEE Main", url:"https://www.mnit.ac.in", nirf:null },
+  { name:"NIT Nagpur (VNIT)", short:"VNIT", type:"NIT", city:"Nagpur", state:"Maharashtra", exam:"JEE Main", url:"https://vnit.ac.in", nirf:null },
+  { name:"NIT Surat (SVNIT)", short:"SVNIT", type:"NIT", city:"Surat", state:"Gujarat", exam:"JEE Main", url:"https://www.svnit.ac.in", nirf:null },
+  { name:"NIT Bhopal (MANIT)", short:"MANIT", type:"NIT", city:"Bhopal", state:"Madhya Pradesh", exam:"JEE Main", url:"https://www.manit.ac.in", nirf:null },
+  { name:"NIT Kurukshetra", short:"NITKKR", type:"NIT", city:"Kurukshetra", state:"Haryana", exam:"JEE Main", url:"https://nitkkr.ac.in", nirf:null },
+  { name:"NIT Silchar", short:"NITS", type:"NIT", city:"Silchar", state:"Assam", exam:"JEE Main", url:"https://www.nits.ac.in", nirf:null },
+  { name:"NIT Hamirpur", short:"NITH", type:"NIT", city:"Hamirpur", state:"Himachal Pradesh", exam:"JEE Main", url:"https://nith.ac.in", nirf:null },
+  { name:"NIT Durgapur", short:"NITDGP", type:"NIT", city:"Durgapur", state:"West Bengal", exam:"JEE Main", url:"https://nitdgp.ac.in", nirf:null },
+  { name:"NIT Patna", short:"NITP", type:"NIT", city:"Patna", state:"Bihar", exam:"JEE Main", url:"https://www.nitp.ac.in", nirf:null },
+  { name:"NIT Agartala", short:"NITA", type:"NIT", city:"Agartala", state:"Tripura", exam:"JEE Main", url:"https://www.nita.ac.in", nirf:null },
+  { name:"NIT Raipur", short:"NITRR", type:"NIT", city:"Raipur", state:"Chhattisgarh", exam:"JEE Main", url:"https://www.nitrr.ac.in", nirf:null },
+  { name:"NIT Goa", short:"NITG", type:"NIT", city:"Goa", state:"Goa", exam:"JEE Main", url:"https://www.nitgoa.ac.in", nirf:null },
+  { name:"NIT Manipur", short:"NITMN", type:"NIT", city:"Imphal", state:"Manipur", exam:"JEE Main", url:"https://www.nitmanipur.ac.in", nirf:null },
+  { name:"NIT Mizoram", short:"NITMZ", type:"NIT", city:"Aizawl", state:"Mizoram", exam:"JEE Main", url:"https://www.nitmz.ac.in", nirf:null },
+  { name:"NIT Meghalaya", short:"NITM", type:"NIT", city:"Shillong", state:"Meghalaya", exam:"JEE Main", url:"https://www.nitm.ac.in", nirf:null },
+  { name:"NIT Arunachal Pradesh", short:"NITAP", type:"NIT", city:"Yupia", state:"Arunachal Pradesh", exam:"JEE Main", url:"https://www.nitap.ac.in", nirf:null },
+  { name:"NIT Sikkim", short:"NITSKM", type:"NIT", city:"Ravangla", state:"Sikkim", exam:"JEE Main", url:"https://nitsikkim.ac.in", nirf:null },
+  { name:"NIT Uttarakhand", short:"NITUK", type:"NIT", city:"Srinagar", state:"Uttarakhand", exam:"JEE Main", url:"https://nituk.ac.in", nirf:null },
+  { name:"NIT Andhra Pradesh", short:"NITANDHRA", type:"NIT", city:"Tadepalligudem", state:"Andhra Pradesh", exam:"JEE Main", url:"https://www.nitandhra.ac.in", nirf:null },
+  { name:"NIT Delhi", short:"NITD", type:"NIT", city:"New Delhi", state:"Delhi", exam:"JEE Main", url:"https://nitdelhi.ac.in", nirf:null },
+  { name:"NIT Puducherry", short:"NITPY", type:"NIT", city:"Karaikal", state:"Puducherry", exam:"JEE Main", url:"https://nitpy.ac.in", nirf:null },
+  { name:"NIT Nagaland", short:"NITN", type:"NIT", city:"Chumukedima", state:"Nagaland", exam:"JEE Main", url:"https://www.nitnagaland.ac.in", nirf:null },
+  // BITS
+  { name:"BITS Pilani", short:"BITS Pilani", type:"BITS", city:"Pilani", state:"Rajasthan", exam:"BITSAT", url:"https://www.bits-pilani.ac.in", nirf:24 },
+  { name:"BITS Goa", short:"BITS Goa", type:"BITS", city:"Goa", state:"Goa", exam:"BITSAT", url:"https://www.bits-pilani.ac.in/goa", nirf:null },
+  { name:"BITS Hyderabad", short:"BITS Hyd", type:"BITS", city:"Hyderabad", state:"Telangana", exam:"BITSAT", url:"https://www.bits-pilani.ac.in/hyderabad", nirf:null },
+  // IIITs
+  { name:"IIIT Hyderabad", short:"IIITH", type:"IIIT", city:"Hyderabad", state:"Telangana", exam:"JEE Main/UGEE", url:"https://www.iiit.ac.in", nirf:null },
+  { name:"IIIT Allahabad", short:"IIITA", type:"IIIT", city:"Prayagraj", state:"Uttar Pradesh", exam:"JEE Main", url:"https://www.iiita.ac.in", nirf:null },
+  { name:"IIIT Bangalore", short:"IIITB", type:"IIIT", city:"Bengaluru", state:"Karnataka", exam:"JEE Main/PGEE", url:"https://www.iiitb.ac.in", nirf:null },
+  { name:"IIIT Delhi", short:"IIITD", type:"IIIT", city:"New Delhi", state:"Delhi", exam:"JEE Main/JAC", url:"https://www.iiitd.ac.in", nirf:null },
+  { name:"IIIT Gwalior", short:"ABV-IIITM", type:"IIIT", city:"Gwalior", state:"Madhya Pradesh", exam:"JEE Main", url:"https://www.iiitm.ac.in", nirf:null },
+  { name:"IIIT Pune", short:"IIITP", type:"IIIT", city:"Pune", state:"Maharashtra", exam:"JEE Main", url:"https://www.iiitp.ac.in", nirf:null },
+  { name:"IIIT Kota", short:"IIITK", type:"IIIT", city:"Kota", state:"Rajasthan", exam:"JEE Main", url:"https://www.iiitkota.ac.in", nirf:null },
+  { name:"IIIT Lucknow", short:"IIITL", type:"IIIT", city:"Lucknow", state:"Uttar Pradesh", exam:"JEE Main", url:"https://www.iiitl.ac.in", nirf:null },
+  { name:"IIIT Vadodara", short:"IIITV", type:"IIIT", city:"Vadodara", state:"Gujarat", exam:"JEE Main", url:"https://www.iiitvadodara.ac.in", nirf:null },
+  { name:"IIIT Bhopal", short:"IIITBPL", type:"IIIT", city:"Bhopal", state:"Madhya Pradesh", exam:"JEE Main", url:"https://www.iiitbhopal.ac.in", nirf:null },
+  { name:"IIIT Kalyani", short:"IIITK", type:"IIIT", city:"Kalyani", state:"West Bengal", exam:"JEE Main", url:"https://www.iiitkalyani.ac.in", nirf:null },
+  { name:"IIIT Una", short:"IIITUna", type:"IIIT", city:"Una", state:"Himachal Pradesh", exam:"JEE Main", url:"https://www.iiituna.ac.in", nirf:null },
+  { name:"IIIT Sri City", short:"IIITS", type:"IIIT", city:"Sri City", state:"Andhra Pradesh", exam:"JEE Main", url:"https://www.iiits.ac.in", nirf:null },
+  { name:"IIIT Sonepat", short:"IIITSon", type:"IIIT", city:"Sonepat", state:"Haryana", exam:"JEE Main", url:"https://www.iiisonepat.ac.in", nirf:null },
+  { name:"IIIT Nagpur", short:"IIITN", type:"IIIT", city:"Nagpur", state:"Maharashtra", exam:"JEE Main", url:"https://www.iiitn.ac.in", nirf:null },
+  { name:"IIIT Ranchi", short:"IIITRanchi", type:"IIIT", city:"Ranchi", state:"Jharkhand", exam:"JEE Main", url:"https://www.iiitranchi.ac.in", nirf:null },
+  { name:"IIIT Manipur", short:"IIITManpur", type:"IIIT", city:"Imphal", state:"Manipur", exam:"JEE Main", url:"https://www.iiitmanipur.ac.in", nirf:null },
+  // Deemed
+  { name:"VIT Vellore", short:"VIT", type:"Deemed", city:"Vellore", state:"Tamil Nadu", exam:"VITEEE", url:"https://vit.ac.in", nirf:11 },
+  { name:"VIT Chennai", short:"VIT Chennai", type:"Deemed", city:"Chennai", state:"Tamil Nadu", exam:"VITEEE", url:"https://chennai.vit.ac.in", nirf:null },
+  { name:"VIT Bhopal", short:"VIT Bhopal", type:"Deemed", city:"Bhopal", state:"Madhya Pradesh", exam:"VITEEE", url:"https://vitbhopal.ac.in", nirf:null },
+  { name:"VIT-AP", short:"VIT AP", type:"Deemed", city:"Amaravati", state:"Andhra Pradesh", exam:"VITEEE", url:"https://vitap.ac.in", nirf:null },
+  { name:"Manipal Institute of Technology", short:"MIT Manipal", type:"Deemed", city:"Manipal", state:"Karnataka", exam:"MET/JEE Main", url:"https://manipal.edu/mit.html", nirf:null },
+  { name:"SRM Institute of Science and Technology", short:"SRMIST", type:"Deemed", city:"Chennai", state:"Tamil Nadu", exam:"SRMJEEE/JEE Main", url:"https://www.srmist.edu.in", nirf:null },
+  { name:"Thapar Institute of Engineering", short:"Thapar", type:"Deemed", city:"Patiala", state:"Punjab", exam:"JEE Main", url:"https://www.thapar.edu", nirf:43 },
+  { name:"Amity University", short:"Amity", type:"Deemed", city:"Noida", state:"Uttar Pradesh", exam:"Amity JEE/JEE Main", url:"https://www.amity.edu", nirf:null },
+  { name:"Symbiosis Institute of Technology", short:"SIT Pune", type:"Deemed", city:"Pune", state:"Maharashtra", exam:"SET", url:"https://www.sitpune.edu.in", nirf:null },
+  { name:"Kalinga Institute of Industrial Technology", short:"KIIT", type:"Deemed", city:"Bhubaneswar", state:"Odisha", exam:"KIITEE", url:"https://kiit.ac.in", nirf:null },
+  { name:"Vellore Institute of Technology (VIT)", short:"VIT", type:"Deemed", city:"Vellore", state:"Tamil Nadu", exam:"VITEEE", url:"https://vit.ac.in", nirf:11 },
+  // State Universities
+  { name:"Jadavpur University", short:"JU", type:"State Univ.", city:"Kolkata", state:"West Bengal", exam:"WBJEE", url:"https://jadavpuruniversity.in", nirf:15 },
+  { name:"Anna University (College of Engineering Guindy)", short:"CEG", type:"State Univ.", city:"Chennai", state:"Tamil Nadu", exam:"TNEA", url:"https://www.annauniv.edu", nirf:12 },
+  { name:"Delhi Technological University", short:"DTU", type:"State Univ.", city:"New Delhi", state:"Delhi", exam:"JEE Main (Delhi)", url:"https://dtu.ac.in", nirf:36 },
+  { name:"Netaji Subhas University of Technology", short:"NSUT", type:"State Univ.", city:"New Delhi", state:"Delhi", exam:"JEE Main (Delhi)", url:"https://nsut.ac.in", nirf:null },
+  { name:"IIEST Shibpur", short:"IIEST", type:"State Univ.", city:"Howrah", state:"West Bengal", exam:"WBJEE/JEE Main", url:"https://www.iiests.ac.in", nirf:null },
+  { name:"PEC Chandigarh", short:"PEC", type:"State Univ.", city:"Chandigarh", state:"Chandigarh", exam:"JEE Main", url:"https://pec.ac.in", nirf:null },
+  { name:"Pune University (COEP)", short:"COEP", type:"Govt (Auto)", city:"Pune", state:"Maharashtra", exam:"MHT-CET/JEE Main", url:"https://www.coeptech.ac.in", nirf:null },
+  { name:"VJTI Mumbai", short:"VJTI", type:"Govt (Auto)", city:"Mumbai", state:"Maharashtra", exam:"MHT-CET/JEE Main", url:"https://vjti.ac.in", nirf:null },
+  { name:"ICT Mumbai", short:"ICT Mumbai", type:"State Univ.", city:"Mumbai", state:"Maharashtra", exam:"MHT-CET", url:"https://www.ictmumbai.edu.in", nirf:null },
+  { name:"BMS College of Engineering", short:"BMSCE", type:"Private", city:"Bengaluru", state:"Karnataka", exam:"COMEDK/KCET", url:"https://www.bmsce.ac.in", nirf:null },
+  { name:"PES University", short:"PESU", type:"Private", city:"Bengaluru", state:"Karnataka", exam:"PESSAT/COMEDK", url:"https://pes.edu", nirf:null },
+  { name:"RV College of Engineering", short:"RVCE", type:"Private", city:"Bengaluru", state:"Karnataka", exam:"COMEDK/KCET", url:"https://www.rvce.edu.in", nirf:null },
+  { name:"MS Ramaiah Institute of Technology", short:"MSRIT", type:"Private", city:"Bengaluru", state:"Karnataka", exam:"COMEDK/KCET", url:"https://www.msrit.edu", nirf:null },
+  { name:"Nirma University", short:"Nirma", type:"Deemed", city:"Ahmedabad", state:"Gujarat", exam:"NUAT/JEE Main", url:"https://nirmauni.ac.in", nirf:null },
+  { name:"LPU (Lovely Professional University)", short:"LPU", type:"Deemed", city:"Phagwara", state:"Punjab", exam:"LPUNEST/JEE Main", url:"https://www.lpu.in", nirf:null },
+  { name:"Chandigarh University", short:"CU", type:"Deemed", city:"Mohali", state:"Punjab", exam:"CUCET/JEE Main", url:"https://www.cuchd.in", nirf:null },
+  { name:"MIT Pune (Maharashtra Institute of Technology)", short:"MIT Pune", type:"Private", city:"Pune", state:"Maharashtra", exam:"MHT-CET", url:"https://www.mitpune.com", nirf:null },
+  { name:"SPIT Mumbai", short:"SPIT", type:"Govt (Auto)", city:"Mumbai", state:"Maharashtra", exam:"MHT-CET/JEE Main", url:"https://www.spit.ac.in", nirf:null },
+  { name:"PICT Pune", short:"PICT", type:"Private", city:"Pune", state:"Maharashtra", exam:"MHT-CET", url:"https://pict.edu", nirf:null },
+  // GFTIs
+  { name:"NIFFT Ranchi", short:"NIFFT", type:"GFTI", city:"Ranchi", state:"Jharkhand", exam:"JEE Main", url:"https://www.nifft.ac.in", nirf:null },
+  { name:"HIT Haldia", short:"HITHALDIA", type:"GFTI", city:"Haldia", state:"West Bengal", exam:"JEE Main", url:"https://www.hithaldia.in", nirf:null },
+  { name:"SLIET Longowal", short:"SLIET", type:"GFTI", city:"Sangrur", state:"Punjab", exam:"JEE Main", url:"https://www.sliet.ac.in", nirf:null },
+  { name:"NERIST Nirjuli", short:"NERIST", type:"GFTI", city:"Nirjuli", state:"Arunachal Pradesh", exam:"JEE Main", url:"https://www.nerist.ac.in", nirf:null },
+  { name:"CIT Kokrajhar", short:"CITK", type:"GFTI", city:"Kokrajhar", state:"Assam", exam:"JEE Main", url:"https://www.cit.ac.in", nirf:null },
+  { name:"Assam University Silchar", short:"AUS", type:"GFTI", city:"Silchar", state:"Assam", exam:"JEE Main", url:"https://www.aus.ac.in", nirf:null },
+  // More popular private/state
+  { name:"Shiv Nadar University", short:"SNU", type:"Deemed", city:"Greater Noida", state:"Uttar Pradesh", exam:"SNUSAT/JEE Main", url:"https://snu.edu.in", nirf:null },
+  { name:"IIIT Kottayam", short:"IIITK", type:"IIIT", city:"Kottayam", state:"Kerala", exam:"JEE Main", url:"https://www.iiitkottayam.ac.in", nirf:null },
+  { name:"Bennett University", short:"Bennett", type:"Deemed", city:"Greater Noida", state:"Uttar Pradesh", exam:"BUAT/JEE Main", url:"https://www.bennett.edu.in", nirf:null },
+  { name:"Graphic Era University", short:"GEU", type:"Deemed", city:"Dehradun", state:"Uttarakhand", exam:"JEE Main/Own", url:"https://www.geu.ac.in", nirf:null },
+  { name:"Karunya Institute of Technology", short:"Karunya", type:"Deemed", city:"Coimbatore", state:"Tamil Nadu", exam:"Own/JEE Main", url:"https://www.karunya.edu", nirf:null },
+  { name:"Alliance University", short:"Alliance", type:"Deemed", city:"Bengaluru", state:"Karnataka", exam:"Own/JEE Main", url:"https://www.alliance.edu.in", nirf:null },
+  { name:"GH Raisoni College", short:"GHRCE", type:"Private", city:"Nagpur", state:"Maharashtra", exam:"MHT-CET", url:"https://raisoni.net", nirf:null },
+  { name:"Sathyabama Institute", short:"Sathyabama", type:"Deemed", city:"Chennai", state:"Tamil Nadu", exam:"Own/JEE Main", url:"https://www.sathyabama.ac.in", nirf:null },
+  { name:"PSG College of Technology", short:"PSGCT", type:"Private", city:"Coimbatore", state:"Tamil Nadu", exam:"TNEA", url:"https://www.psgtech.edu", nirf:null },
+  { name:"SSN College of Engineering", short:"SSNCE", type:"Private", city:"Chennai", state:"Tamil Nadu", exam:"TNEA", url:"https://www.ssn.edu.in", nirf:null },
+];
+
+const TYPE_COLORS = {
+  "IIT":"#f59e0b","NIT":"#10b981","BITS":"#10b981","IIIT":"#6366f1",
+  "Deemed":"#ec4899","State Univ.":"#14b8a6","Govt (Auto)":"#8b5cf6",
+  "Private":"#f97316","GFTI":"#38bdf8"
+};
+
+function CollegeSearch({ t }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  function doSearch(q) {
+    const term = q.toLowerCase().trim();
+    if (!term) { setResults([]); setSearched(false); return; }
+    const matches = COLLEGE_DB.filter(c =>
+      c.name.toLowerCase().includes(term) ||
+      c.short.toLowerCase().includes(term) ||
+      c.city.toLowerCase().includes(term) ||
+      c.state.toLowerCase().includes(term) ||
+      c.type.toLowerCase().includes(term) ||
+      c.exam.toLowerCase().includes(term)
+    ).slice(0, 20);
+    setResults(matches);
+    setSearched(true);
+  }
+
+  function handleInput(e) {
+    setQuery(e.target.value);
+    doSearch(e.target.value);
+  }
+
+  const googleFallback = `https://www.google.com/search?q=${encodeURIComponent(query + " engineering college official site India")}`;
+
+  return (
+    <div className="anim-fadeup">
+      {/* Header */}
+      <div style={{ marginBottom:20 }}>
+        <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:22, marginBottom:4 }}>🔍 Find Any College in India</div>
+        <div style={{ color:t.textMuted, fontSize:14 }}>Search by college name, city, state, or exam. We'll take you straight to the official website.</div>
+      </div>
+
+      {/* Search bar */}
+      <div style={{ position:"relative", marginBottom:20 }}>
+        <div style={{
+          position:"absolute", left:16, top:"50%", transform:"translateY(-50%)",
+          fontSize:18, opacity:0.5
+        }}>🔍</div>
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={handleInput}
+          onKeyDown={e => { if(e.key==="Enter") doSearch(query); }}
+          placeholder="Type college name, city, state or exam… e.g. 'IIT Bombay', 'Trichy', 'WBJEE'"
+          style={{
+            width:"100%", padding:"14px 16px 14px 46px", borderRadius:14,
+            border:`2px solid ${query ? "#38bdf8" : t.border}`,
+            background:t.bgInput, color:t.text, fontSize:15, outline:"none",
+            fontFamily:"'DM Sans',sans-serif", lineHeight:1.5,
+            transition:"border-color 0.2s",
+          }}
+        />
+        {query && (
+          <button onClick={() => { setQuery(""); setResults([]); setSearched(false); inputRef.current?.focus(); }} style={{
+            position:"absolute", right:14, top:"50%", transform:"translateY(-50%)",
+            background:"transparent", border:"none", cursor:"pointer",
+            fontSize:18, color:t.textMuted, padding:4,
+          }}>✕</button>
+        )}
+      </div>
+
+      {/* Quick type filters */}
+      {!searched && (
+        <div style={{ marginBottom:24 }}>
+          <div style={{ fontSize:13, color:t.textMuted, fontWeight:600, marginBottom:10 }}>Browse by type:</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {Object.keys(TYPE_COLORS).map(type => (
+              <button key={type} onClick={() => { setQuery(type); doSearch(type); }} className="pill-btn" style={{
+                padding:"6px 14px", borderRadius:20, border:`1px solid ${TYPE_COLORS[type]}44`,
+                background:TYPE_COLORS[type]+"15", color:TYPE_COLORS[type],
+                cursor:"pointer", fontSize:13, fontWeight:700, fontFamily:"'DM Sans',sans-serif",
+              }}>{type}</button>
+            ))}
+          </div>
+
+          {/* Popular searches */}
+          <div style={{ fontSize:13, color:t.textMuted, fontWeight:600, marginTop:18, marginBottom:10 }}>Popular searches:</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {["IIT Bombay","NIT Trichy","BITS Pilani","IIIT Hyderabad","VIT Vellore","Jadavpur","COEP Pune","NIT Warangal"].map(s => (
+              <button key={s} onClick={() => { setQuery(s); doSearch(s); }} className="pill-btn" style={{
+                padding:"6px 13px", borderRadius:20, border:`1px solid ${t.border}`,
+                background:t.bgCard, color:t.text, cursor:"pointer",
+                fontSize:12.5, fontFamily:"'DM Sans',sans-serif",
+              }}>{s}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Results */}
+      {searched && (
+        <div>
+          <div style={{ fontSize:13, color:t.textMuted, marginBottom:12 }}>
+            {results.length > 0
+              ? `Found ${results.length} college${results.length > 1 ? "s" : ""} matching "${query}"`
+              : `No colleges found for "${query}"`}
+          </div>
+
+          {results.length > 0 ? (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
+              {results.map((c, i) => {
+                const color = TYPE_COLORS[c.type] || "#6366f1";
+                return (
+                  <div key={i} className="hover-card" style={{
+                    background:t.bgCard, border:`1px solid ${t.border}`,
+                    borderRadius:14, padding:"18px 20px",
+                    borderLeft:`3px solid ${color}`,
+                    display:"flex", flexDirection:"column", gap:10,
+                  }}>
+                    {/* Top row */}
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                      <div style={{ flexGrow:1 }}>
+                        <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:800, fontSize:15, color:t.text, lineHeight:1.3 }}>{c.name}</div>
+                        <div style={{ fontSize:12, color:t.textMuted, marginTop:3 }}>📍 {c.city}, {c.state}</div>
+                      </div>
+                      <span style={{
+                        background:color+"22", color:color, borderRadius:7,
+                        padding:"3px 9px", fontSize:11, fontWeight:700, flexShrink:0
+                      }}>{c.type}</span>
+                    </div>
+
+                    {/* Info row */}
+                    <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                      <div style={{ fontSize:12, color:t.textMuted }}>
+                        📝 <span style={{ color:t.text, fontWeight:600 }}>{c.exam}</span>
+                      </div>
+                      {c.nirf && (
+                        <div style={{ fontSize:12, color:t.textMuted }}>
+                          🏆 NIRF <span style={{ color:"#f59e0b", fontWeight:700 }}>#{c.nirf}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* URL preview */}
+                    <div style={{ fontSize:12, color:color, fontFamily:"monospace", background:color+"0f", borderRadius:7, padding:"5px 9px", wordBreak:"break-all" }}>
+                      🌐 {c.url.replace("https://","").replace("http://","")}
+                    </div>
+
+                    {/* Buttons */}
+                    <div style={{ display:"flex", gap:8, marginTop:2 }}>
+                      <a
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flexGrow:1, padding:"9px 0", borderRadius:9, border:"none",
+                          background:color, color:"#fff", fontWeight:700, fontSize:13,
+                          cursor:"pointer", textDecoration:"none", textAlign:"center",
+                          fontFamily:"'DM Sans',sans-serif", display:"block",
+                        }}
+                      >
+                        🌐 Official Website ↗
+                      </a>
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(c.name + " admission " + new Date().getFullYear())}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          padding:"9px 14px", borderRadius:9, border:`1px solid ${t.border}`,
+                          background:t.bgCard2, color:t.text, fontWeight:600, fontSize:13,
+                          cursor:"pointer", textDecoration:"none", textAlign:"center",
+                          fontFamily:"'DM Sans',sans-serif", display:"block", whiteSpace:"nowrap",
+                        }}
+                      >
+                        🔎 Search
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            /* Not found — Google fallback */
+            <div style={{
+              background:t.bgCard, border:`1px solid ${t.border}`, borderRadius:14,
+              padding:"28px 24px", textAlign:"center",
+            }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>🏫</div>
+              <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:700, fontSize:17, color:t.text, marginBottom:8 }}>
+                College not in our list yet
+              </div>
+              <div style={{ fontSize:13.5, color:t.textMuted, marginBottom:20, lineHeight:1.7 }}>
+                We might not have this college yet. Click below to search Google for its official site — we'll take you straight to the results.
+              </div>
+              <a
+                href={googleFallback}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display:"inline-block", padding:"11px 24px", borderRadius:10, border:"none",
+                  background:"#38bdf8", color:"#fff", fontWeight:700, fontSize:14,
+                  cursor:"pointer", textDecoration:"none", fontFamily:"'DM Sans',sans-serif",
+                }}
+              >
+                🔍 Search "{query}" on Google ↗
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

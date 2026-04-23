@@ -1,9 +1,9 @@
 // api/chat.js — Vercel Serverless Function
-// Calls Google Gemini 1.5 Flash (FREE tier: 1,500 requests/day, no credit card needed)
-// API key is stored securely in Vercel environment variables — never exposed to students
+// Uses Groq API (FREE tier: 14,400 requests/day, 30 req/min on llama-3.3-70b-versatile)
+// Model: llama-3.3-70b-versatile — latest stable, NOT deprecated
+// Get your free key at: https://console.groq.com/keys
 
 export default async function handler(req, res) {
-  // Only allow POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -14,49 +14,48 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Invalid request body" });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: "API key not configured on server." });
+    return res.status(500).json({ error: "GROQ_API_KEY not configured in Vercel environment variables." });
   }
 
   try {
-    // Convert messages to Gemini format
-    // Gemini uses "user" and "model" (not "assistant")
-    const contents = messages.map((m) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
     const body = {
-      system_instruction: {
-        parts: [{ text: system || "You are a helpful exam counsellor for Indian engineering students." }],
-      },
-      contents,
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 0.7,
-      },
+      model: "llama-3.3-70b-versatile",
+      max_tokens: 1024,
+      temperature: 0.7,
+      messages: [
+        {
+          role: "system",
+          content: system || "You are a helpful exam counsellor for Indian engineering students.",
+        },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
     };
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      }
-    );
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
 
-    const data = await geminiRes.json();
+    if (!groqRes.ok) {
+      const errData = await groqRes.json().catch(() => ({}));
+      console.error("Groq API error:", errData);
+      return res.status(502).json({ error: "Groq API returned an error.", detail: errData });
+    }
 
-    // Extract text from Gemini response
+    const data = await groqRes.json();
     const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      data?.choices?.[0]?.message?.content ||
       "Sorry, I could not generate a response. Please try again.";
 
     return res.status(200).json({ reply });
   } catch (err) {
-    console.error("Gemini API error:", err);
-    return res.status(500).json({ error: "Failed to reach AI service." });
+    console.error("Server error:", err);
+    return res.status(500).json({ error: "Failed to reach Groq API." });
   }
 }
