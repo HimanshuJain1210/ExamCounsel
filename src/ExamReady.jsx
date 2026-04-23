@@ -309,12 +309,34 @@ const TOP_COLLEGES_DATA = [
 
 /* ─── UPCOMING EXAMS ─────────────────────────────────────────────────────── */
 const UPCOMING = [
-  { exam:"VITEEE", date:"21–27 Apr 2025", days:null, color:"#ec4899" },
-  { exam:"WBJEE", date:"27 Apr 2025", days:null, color:"#14b8a6" },
-  { exam:"COMEDK", date:"11 May 2025", days:null, color:"#f97316" },
-  { exam:"BITSAT Phase 1", date:"20–26 May 2025", days:null, color:"#10b981" },
-  { exam:"JEE Advanced", date:"18 May 2025", days:null, color:"#f59e0b" },
-  { exam:"JoSAA Starts", date:"June 2025", days:null, color:"#8b5cf6" },
+  {
+    exam:"JEE Main 2026", date2026:"Jan 22–30 & Apr 2–9, 2026", date2025:"Jan & Apr 2025",
+    status:"concluded", color:"#6366f1", note:"Both sessions concluded"
+  },
+  {
+    exam:"VITEEE 2026", date2026:"28 Apr – 3 May 2026", date2025:"21–27 Apr 2025",
+    status:"ongoing", color:"#ec4899", note:"Ongoing now"
+  },
+  {
+    exam:"COMEDK 2026", date2026:"9 May 2026", date2025:"11 May 2025",
+    status:"upcoming", color:"#f97316", note:"~16 days away"
+  },
+  {
+    exam:"JEE Advanced 2026", date2026:"17 May 2026", date2025:"18 May 2025",
+    status:"upcoming", color:"#f59e0b", note:"Registration open till May 2"
+  },
+  {
+    exam:"WBJEE 2026", date2026:"24 May 2026", date2025:"27 Apr 2025",
+    status:"upcoming", color:"#14b8a6", note:"~31 days away"
+  },
+  {
+    exam:"BITSAT 2026 S2", date2026:"24–26 May 2026", date2025:"20–26 May 2025",
+    status:"upcoming", color:"#10b981", note:"S1 (Apr 15–16) concluded"
+  },
+  {
+    exam:"JoSAA 2026", date2026:"June–July 2026", date2025:"June–July 2025",
+    status:"upcoming", color:"#8b5cf6", note:"After JEE Advanced result"
+  },
 ];
 
 /* ─── COUNSELLOR QUICK PROMPTS ───────────────────────────────────────────── */
@@ -479,20 +501,47 @@ function Dashboard({ t, setTab }) {
 
       {/* Upcoming exams */}
       <div style={{ background:t.bgCard, border:`1px solid ${t.border}`, borderRadius:16, padding:"20px 22px", marginBottom:24 }}>
-        <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:700, fontSize:16, marginBottom:14 }}>
-          📅 Upcoming Exam Dates 2025
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:700, fontSize:16 }}>
+            📅 Exam Dates 2026
+          </div>
+          <span style={{ fontSize:11, color:t.textMuted, background:t.bgCard2, border:`1px solid ${t.border}`, borderRadius:6, padding:"3px 8px" }}>
+            2025 dates shown for reference only
+          </span>
         </div>
-        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-          {UPCOMING.map(u => (
-            <div key={u.exam} style={{
-              background:t.bgCard2, border:`1px solid ${t.border}`, borderRadius:10,
-              padding:"10px 14px", minWidth:150,
-            }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:u.color, marginBottom:6 }}></div>
-              <div style={{ fontWeight:700, fontSize:13, color:t.text }}>{u.exam}</div>
-              <div style={{ fontSize:11.5, color:t.textMuted, marginTop:3 }}>{u.date}</div>
-            </div>
-          ))}
+        <div style={{ fontSize:12, color:t.textMuted, marginBottom:16 }}>
+          2026 dates are confirmed/official. 2025 dates indicate when the exam typically occurs.
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          {UPCOMING.map(u => {
+            const statusStyle = {
+              concluded: { bg:"#64748b22", color:"#64748b", label:"Concluded" },
+              ongoing:   { bg:"#10b98122", color:"#10b981", label:"● Ongoing" },
+              upcoming:  { bg:u.color+"22", color:u.color, label:"Upcoming" },
+            }[u.status];
+            return (
+              <div key={u.exam} style={{
+                background:t.bgCard2, border:`1px solid ${t.border}`, borderRadius:10,
+                padding:"11px 14px", display:"flex", alignItems:"center", gap:12,
+                opacity: u.status === "concluded" ? 0.65 : 1,
+              }}>
+                <div style={{ width:10, height:10, borderRadius:"50%", background:u.color, flexShrink:0 }}></div>
+                <div style={{ flexGrow:1, minWidth:0 }}>
+                  <div style={{ fontWeight:700, fontSize:13, color:t.text }}>{u.exam}</div>
+                  <div style={{ display:"flex", gap:12, marginTop:3, flexWrap:"wrap" }}>
+                    <span style={{ fontSize:12, color:t.text, fontWeight:600 }}>📌 {u.date2026}</span>
+                    <span style={{ fontSize:11.5, color:t.textMuted }}>2025 ref: {u.date2025}</span>
+                  </div>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, flexShrink:0 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:statusStyle.color, background:statusStyle.bg, borderRadius:6, padding:"2px 8px" }}>
+                    {statusStyle.label}
+                  </span>
+                  {u.note && <span style={{ fontSize:10.5, color:t.textMuted }}>{u.note}</span>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
